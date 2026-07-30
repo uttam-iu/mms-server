@@ -4,7 +4,7 @@ const _ = require('lodash');
 const jwt = require("jsonwebtoken");
 const { v4: uuid } = require('uuid');
 
-// const app = require("./app");
+const app = require("./app");
 const dotEnv = require('dotenv');
 dotEnv.config();
 

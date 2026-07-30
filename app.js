@@ -1,19 +1,19 @@
-// const express = require("express");
-// const app = express();
-// const multer = require('multer')
-// const { v4: uuid } = require('uuid');
+const express = require("express");
+const app = express();
+const multer = require('multer')
+const { v4: uuid } = require('uuid');
 // const dbCon = require("./helpers/dbHelper");
 // const checkLogin = require("./middlewares/checkLogin");
 
-// const { serverFormattedDate, serverFormattedDateAndTime } = require('./helpers/utilities');
+const { serverFormattedDate, serverFormattedDateAndTime } = require('./helpers/utilities');
 
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// //Setup Cross Origin
-// app.use(require("cors")());
+//Setup Cross Origin
+app.use(require("cors")());
 
-// const PORT = process.env.PORT;
+const PORT = process.env.PORT;
 // const USER_TABLE = process.env.DB_USER_TABLE;
 // const MESSAGE_TABLE = process.env.DB_MESSAGE_TABLE;
 // const basePath = 'http://localhost:' + PORT + '/';
@@ -127,17 +127,17 @@
 //   });
 // });
 
-// //Bring in the routes
+//Bring in the routes
 // app.use("/user", require("./routes/users"));
 
-// //Setup Error Handlers
-// const errorHandlers = require("./handlers/errorHandlers");
-// app.use(errorHandlers.notFound);
-// app.use(errorHandlers.mysqlErrors);
-// if (process.env.NODE_ENV === "development") {
-//   app.use(errorHandlers.developmentErrors);
-// } else {
-//   app.use(errorHandlers.productionErrors);
-// }
+//Setup Error Handlers
+const errorHandlers = require("./handlers/errorHandlers");
+app.use(errorHandlers.notFound);
+app.use(errorHandlers.mysqlErrors);
+if (process.env.NODE_ENV === "development") {
+  app.use(errorHandlers.developmentErrors);
+} else {
+  app.use(errorHandlers.productionErrors);
+}
 
-// module.exports = app;
+module.exports = app;
