@@ -2,6 +2,7 @@
 const { v4: uuid } = require('uuid');
 const { getHassPassword, isPasswordMatch, getResponseTemplate, serverFormattedDateAndTime } = require('../helpers/utilities');
 // const dbCon = require("../helpers/dbHelper");
+const members = require('../dummyData/users.json');
 var jwt = require('jsonwebtoken');
 
 // const USER_TABLE = process.env.DB_USER_TABLE;
@@ -102,4 +103,30 @@ exports.login = async (req, res) => {
     //             token,
     //         }, "Success.");
     //     });
+};
+
+exports.profile = async (req, res) => {    
+    const data= {
+            "userId": 1,
+            "phone": "01617630101",
+            "userName": "uttam@k.com",
+            "fullName": "Uttam Kumar",
+            "photoUrl": "https://github.com/shadcn.png",
+            "role": "admin",
+            "status": "active",
+            "joinedDate": "2024-01-15",
+            "individualCosts": [
+            {
+                "id": "ic-1-1",
+                "costType": "House Rent",
+                "amount": 3500
+            },
+            {
+                "id": "ic-1-2",
+                "costType": "Room Gas Addon",
+                "amount": 300
+            }
+            ]
+        }
+    return getResponseTemplate(res, 200, data, "success.");
 };

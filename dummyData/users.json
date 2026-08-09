@@ -1,0 +1,97 @@
+[
+      {
+        "userId": 1,
+        "phone": "01617630101",
+        "userName": "uttam@k.com",
+        "fullName": "Uttam Kumar",
+        "photoUrl": "https://github.com/shadcn.png",
+        "role": "admin",
+        "status": "active",
+        "joinedDate": "2024-01-15",
+        "individualCosts": [
+          {
+            "id": "ic-1-1",
+            "costType": "House Rent",
+            "amount": 3500
+          },
+          {
+            "id": "ic-1-2",
+            "costType": "Room Gas Addon",
+            "amount": 300
+          }
+        ]
+      },
+      {
+        "userId": 2,
+        "phone": "01671212534",
+        "userName": "sagor@k.com",
+        "fullName": "Assaduzzaman Sagor",
+        "photoUrl": "https://github.com/maxleiter.png",
+        "role": "member",
+        "status": "active",
+        "joinedDate": "2024-02-15",
+        "individualCosts": [
+          {
+            "id": "ic-2-1",
+            "costType": "House Rent",
+            "amount": 4000
+          }
+        ]
+      },
+      {
+        "userId": 3,
+        "phone": "01671212533",
+        "userName": "shibly@k.com",
+        "fullName": "Shibly Mustafiz",
+        "photoUrl": "https://github.com/evilrabbit.png",
+        "role": "member",
+        "status": "active",
+        "joinedDate": "2024-03-15",
+        "individualCosts": [
+          {
+            "id": "ic-3-1",
+            "costType": "House Rent",
+            "amount": 3800
+          },
+          {
+            "id": "ic-3-2",
+            "costType": "Parking Fee",
+            "amount": 500
+          }
+        ]
+      },
+      {
+        "userId": 4,
+        "phone": "01671212532",
+        "userName": "ariful@k.com",
+        "fullName": "Ariful Islam",
+        "photoUrl": "https://github.com/maxleiter.png",
+        "role": "member",
+        "status": "active",
+        "joinedDate": "2024-04-15",
+        "individualCosts": [
+          {
+            "id": "ic-4-1",
+            "costType": "House Rent",
+            "amount": 3500
+          }
+        ]
+      },
+      {
+        "userId": 5,
+        "phone": "01671212531",
+        "userName": "junayed@k.com",
+        "fullName": "Junayed Fahim",
+        "photoUrl": "https://github.com/evilrabbit.png",
+        "role": "member",
+        "status": "inactive",
+        "joinedDate": "2024-05-15",
+        "individualCosts": [
+          {
+            "id": "ic-5-1",
+            "costType": "House Rent",
+            "amount": 3500
+          }
+        ]
+      }
+    ]

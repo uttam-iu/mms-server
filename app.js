@@ -32,6 +32,8 @@ app.get('/', (req, res) => {
 });
 
 app.use("/user", require("./routes/users"));
+app.use("/menus", require("./routes/menus"));
+app.use("/members", require("./routes/members"));
 
 // const imageFileFilter = function (req, file, cb) {
 //   if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
