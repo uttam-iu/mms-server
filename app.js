@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const multer = require('multer')
 const { v4: uuid } = require('uuid');
@@ -10,8 +11,12 @@ const { serverFormattedDate, serverFormattedDateAndTime } = require('./helpers/u
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-//Setup Cross Origin
-app.use(require("cors")());
+// Setup Cross Origin
+app.use(cors({ origin: true, credentials: true }));
+// app.use(cors({ 
+//   origin: 'http://localhost:3000', // Aponar frontend dynamic port exact hobe (Do NOT use true)
+//   credentials: true 
+// }));
 
 const PORT = process.env.PORT;
 // const USER_TABLE = process.env.DB_USER_TABLE;
@@ -21,6 +26,12 @@ const PORT = process.env.PORT;
 // app.use(express.static(__dirname + '/public'));
 // const IMAGE_FOLDER = process.env.IMAGE_FOLDER;
 // app.use(`/${IMAGE_FOLDER}`, express.static(`${IMAGE_FOLDER}`));
+
+app.get('/', (req, res) => {
+  res.send('Hello from Express and MongoDB!');
+});
+
+app.use("/user", require("./routes/users"));
 
 // const imageFileFilter = function (req, file, cb) {
 //   if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {

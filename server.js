@@ -13,6 +13,8 @@ const server = app.listen(process.env.PORT, () => {
 	console.log(`Server listening on ${process.env.PORT}`);
 });
 
+
+
 const socketIO = require("socket.io")(server, {
 	allowEIO3: true,
 	cors: {
