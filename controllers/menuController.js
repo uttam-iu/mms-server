@@ -1,7 +1,6 @@
 
 const { v4: uuid } = require('uuid');
 const { getHassPassword, isPasswordMatch, getResponseTemplate, serverFormattedDateAndTime } = require('../helpers/utilities');
-const { Snowflake, Heart, Sprout, CloudRain, Sun, Flame, SunMedium, TreePalm, Leaf, Wind, Coffee, Gift } = require('lucide-react');
 // const dbCon = require("../helpers/dbHelper");
 // var jwt = require('jsonwebtoken');
 

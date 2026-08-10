@@ -1,0 +1,35 @@
+name: Node.js CI/CD & Deploy to Render
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-node: '20' 
+
+      - name: Install Dependencies
+        run: npm install
+
+      # আপনার প্রজেক্টে যদি কোনো টেস্ট স্ক্রিপ্ট (npm test) থাকে, তবে নিচের কমেন্টটি তুলে দিন
+      # - name: Run Tests
+      #   run: npm test
+
+  deploy:
+    needs: build-and-test # বিল্ড এবং টেস্ট সফল হলেই কেবল ডেপ্লয় হবে
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Deployment
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
