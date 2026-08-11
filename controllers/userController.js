@@ -1,12 +1,10 @@
 
 const { v4: uuid } = require('uuid');
 const { getHassPassword, isPasswordMatch, getResponseTemplate, serverFormattedDateAndTime } = require('../helpers/utilities');
-// const dbCon = require("../helpers/dbHelper");
 const members = require('../dummyData/users.json');
 var jwt = require('jsonwebtoken');
-
-// const USER_TABLE = process.env.DB_USER_TABLE;
-
+const { default: mongoose } = require('mongoose');
+const { LoggableMemberModel, MemberModel } = require('../schemas/memberSchema');
 
 // exports.register = async (req, res) => {
 //     const { displayName, gender, email, password } = req.body;
@@ -41,7 +39,7 @@ var jwt = require('jsonwebtoken');
 // };
 
 exports.login = async (req, res) => {
-    const { userName, password } = req.body;
+    const { userName, password } = req?.body;
     if (!userName || !password) {
         return getResponseTemplate(res, 400, null, "userName and password are required.");
     }
@@ -51,71 +49,47 @@ exports.login = async (req, res) => {
         return getResponseTemplate(res, 500, null, "Server configuration error: missing JWT_SECRET.");
     }
 
-    const token = jwt.sign({ userId: userName }, JWT_SECRET, { expiresIn: '1h' });
-    return getResponseTemplate(res, 200, {
-        user:  {
-            "userId": 1,
-            "phone": "01617630101",
-            "userName": "uttam@k.com",
-            "fullName": "Uttam Kumar",
-            "photoUrl": "https://github.com/shadcn.png",
-            isAdmin: true,
-        },
-        token,
-    }, "Logged in successfully.");
-    // const emailCheckQuery = `select password from ${USER_TABLE} where email='${email}';`;
-    // dbCon.query(emailCheckQuery, (err, rows, fields) => {
-    //     if (err) getResponseTemplate(res, 400, null, err);
-    //     else if (rows?.length === 0) getResponseTemplate(res, 400, null, "Invalid email.");
-    //     else {
-    //         isPasswordMatch(password, rows?.[0]?.password, (isMatch) => {
-    //             if (!isMatch) getResponseTemplate(res, 400, null, "Invalid password.");
+    try {
+        const matchedUser = await MemberModel.findOne({
+            $or: [
+                { userName: userName },
+                { phone: userName }
+            ]
+        }).lean();
 
-    //             const loginQuery = `select userId, email, displayName, gender, userPhotoUrl from ${USER_TABLE} where email='${email}'`;
-    //             dbCon.query(loginQuery, (err1, rows1, fields) => {
-    //                 if (err1)
-    //                     getResponseTemplate(res, 400, null, "Something went wrong.");
-    //                 else {
-    //                     jwt.sign({
-    //                         userId: rows1?.[0]?.userId
-    //                     }, JWT_SECRET, { expiresIn: '1h' }, (tError, token) => {
-    //                         if (tError)
-    //                             getResponseTemplate(res, 400, null, "Something went wrong.");
-    //                         else getResponseTemplate(res, 200, {
-    //                             user: rows1?.[0],
-    //                             token,
-    //                         }, "Success.");
-    //                     });
-    //                 }
-    //             })
+        if (!matchedUser) {
+            return getResponseTemplate(res, 400, null, 'UserName or Password Mismatch');
+        }
 
-    //         });
-    //     }
-    // })
-    // console.log(userName, password)
-    // jwt.sign({
-    //         userId: 1231
-    //     }, JWT_SECRET, { expiresIn: '1h' }, (tError, token) => {
-    //         if (tError)
-    //             getResponseTemplate(res, 400, null, "Something went wrong.");
-    //         else getResponseTemplate(res, 200, {
-    //             user: {userId: 1231},
-    //             token,
-    //         }, "Success.");
-    //     });
+        isPasswordMatch(password, matchedUser.password, (isMatch) => {
+            if (!isMatch) {
+                return getResponseTemplate(res, 400, null, 'UserName or Password Mismatch');
+            }
+
+            const { password: _password, ...userWithoutPassword } = matchedUser;
+            const token = jwt.sign({ userId: userName }, JWT_SECRET, { expiresIn: '1h' });
+            return getResponseTemplate(res, 200, {
+                user: userWithoutPassword,
+                token,
+            }, "Logged in successfully.");
+        });
+    } catch (err) {
+        console.error('login error', err);
+        return getResponseTemplate(res, 500, null, 'Server error');
+    }
 };
 
-exports.profile = async (req, res) => {    
-    const data= {
-            "userId": 1,
-            "phone": "01617630101",
-            "userName": "uttam@k.com",
-            "fullName": "Uttam Kumar",
-            "photoUrl": "https://github.com/shadcn.png",
-            "role": "admin",
-            "status": "active",
-            "joinedDate": "2024-01-15",
-            "individualCosts": [
+exports.profile = async (req, res) => {
+    const data = {
+        "userId": 1,
+        "phone": "01617630101",
+        "userName": "uttam@k.com",
+        "fullName": "Uttam Kumar",
+        "photoUrl": "https://github.com/shadcn.png",
+        "role": "admin",
+        "status": "active",
+        "joinedDate": "2024-01-15",
+        "individualCosts": [
             {
                 "id": "ic-1-1",
                 "costType": "House Rent",
@@ -126,7 +100,7 @@ exports.profile = async (req, res) => {
                 "costType": "Room Gas Addon",
                 "amount": 300
             }
-            ]
-        }
+        ]
+    }
     return getResponseTemplate(res, 200, data, "success.");
 };

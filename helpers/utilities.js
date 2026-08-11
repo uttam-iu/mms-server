@@ -47,7 +47,7 @@ const serverFormattedDate = (dateStr) => {
 };
 
 const getHassPassword = (text, cb) => {
-    const plainText = text?.toString() 
+    const plainText = text?.toString()
     bcrypt.hash(plainText, saltRounds, function (err, hash) {
         cb(hash);
     });
@@ -60,16 +60,16 @@ const isPasswordMatch = (plainText, hash, cb) => {
     });
 }
 
-const getResponseTemplate = (res, statusCode=200, data=null, message="")=> {
-    const isSuccess = statusCode>=200 && statusCode <300;
+const getResponseTemplate = (res, statusCode = 200, data = null, message = "") => {
+    const isSuccess = statusCode >= 200 && statusCode < 300;
     // const msg = message || statusCode>=200 && statusCode <300 ? 'Success' : 'Failed';
     return res.status(statusCode).json({
-		success: isSuccess,
+        success: isSuccess,
         status: statusCode,
-		message: message,
+        message: message,
         data,
         isError: !isSuccess,
-	});
+    });
 }
 
 module.exports = {
@@ -77,5 +77,5 @@ module.exports = {
     serverFormattedDateAndTime: serverFormattedDateAndTime,
     getHassPassword: getHassPassword,
     isPasswordMatch: isPasswordMatch,
-    getResponseTemplate:getResponseTemplate
+    getResponseTemplate: getResponseTemplate
 }
