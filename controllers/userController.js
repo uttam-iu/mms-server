@@ -67,7 +67,7 @@ exports.login = async (req, res) => {
             }
 
             const { password: _password, ...userWithoutPassword } = matchedUser;
-            const token = jwt.sign({ userId: userName }, JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ userId: matchedUser?.userId }, JWT_SECRET, { expiresIn: '1h' });
             return getResponseTemplate(res, 200, {
                 user: userWithoutPassword,
                 token,

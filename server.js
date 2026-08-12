@@ -35,6 +35,7 @@ socketIO.use(async (socket, next) => {
 		const token = socket.handshake.auth.token;
 		const user = jwt.verify(token, process.env.JWT_SECRET);
 		socket.userId = user?.userId;
+		// socket.userName = user?.userName;
 		next();
 	} catch (err) {
 		console.log('error')
@@ -51,7 +52,24 @@ socketIO.on('connection', (socket) => {
 
 	socket.on('get_members', async (payload, cb) => {
 		try {
-			const members = await MemberModel.find().select('-password').lean();
+			const { searchText, status } = payload || {};
+			const filter = {};
+
+			if (typeof status === 'string' && status.trim()) {
+				filter.status = status.trim();
+			}
+
+			if (typeof searchText === 'string' && searchText.trim()) {
+				const regex = new RegExp(_.escapeRegExp(searchText.trim()), 'i');
+				filter.$or = [
+					{ fullName: regex },
+					{ phone: regex },
+					{ userName: regex }
+				];
+			}
+
+			const members = await MemberModel.find(filter).select('-password').lean();
+
 			cb({
 				success: true,
 				data: members,
@@ -59,6 +77,7 @@ socketIO.on('connection', (socket) => {
 				isError: false,
 				error: null
 			});
+
 		} catch (er) {
 			cb({
 				success: false,
@@ -94,6 +113,7 @@ socketIO.on('connection', (socket) => {
 			})
 		}
 	});
+
 	socket.on('member_update', async (payload, cb) => {
 		try {
 			const userId = payload?.userId;
@@ -101,7 +121,7 @@ socketIO.on('connection', (socket) => {
 				return cb({
 					success: false,
 					data: null,
-					message: 'userId is required to update a member.',
+					message: 'Invalid member.',
 					isError: true,
 					error: null
 				});
@@ -153,4 +173,179 @@ socketIO.on('connection', (socket) => {
 			})
 		}
 	});
+
+	socket.on('get_my_profile', async (payload, cb) => {
+		try {
+			const userId = socket?.userId;
+			if (!userId) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Invalid user',
+					isError: true,
+					error: null
+				});
+			}
+
+			const matchedUser = await MemberModel.findOne({ userId }).select('-password').lean();
+			cb({
+				success: true,
+				data: matchedUser,
+				message: 'Success.',
+				isError: false,
+				error: null
+			});
+		} catch (er) {
+			cb({
+				success: false,
+				data: null,
+				message: 'Failed to retrieve profile.',
+				isError: true,
+				error: er
+			});
+		}
+	});
+
+	socket.on('profile_update', async (payload, cb) => {
+		try {
+			const userId = socket?.userId;
+			if (!userId) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Invalid User',
+					isError: true,
+					error: null
+				});
+			}
+
+			const params = { ...payload, updatedAt: new Date().toISOString() };
+			delete params.userId;
+
+			const mem = await MemberModel.findOneAndUpdate(
+				{ userId },
+				{ $set: params },
+				{ new: true, runValidators: true }
+			).lean();
+
+			if (!mem) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Profile not found.',
+					isError: true,
+					error: null
+				});
+			}
+
+			const { password, ...memberWithoutPassword } = mem;
+			cb({
+				success: true,
+				data: memberWithoutPassword,
+				message: 'Member updated.',
+				isError: false,
+				error: null
+			});
+		} catch (er) {
+			cb({
+				success: false,
+				data: null,
+				message: 'Failed',
+				isError: false,
+				error: er
+			})
+		}
+	});
+
+	socket.on('password_change', async (payload, cb) => {
+		try {
+			const userId = socket?.userId;
+
+			if (!userId) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Invalid User',
+					isError: true,
+					error: null
+				});
+			}
+
+			if (payload?.currentPassword === payload?.newPassword) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Same Password',
+					isError: true,
+					error: null
+				});
+			}
+
+			if (!payload?.currentPassword || !payload?.newPassword) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Password required',
+					isError: true,
+					error: null
+				});
+			}
+
+			const matchedUser = await MemberModel.findOne({ userId }).lean();
+			if (!matchedUser) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'User not found',
+					isError: true,
+					error: null
+				});
+			}
+
+			const isMatched = await new Promise((resolve) => {
+				isPasswordMatch(payload?.currentPassword, matchedUser?.password, (res) => {
+					resolve(res);
+				});
+			});
+
+			if (!isMatched) {
+				return cb({
+					success: false,
+					data: null,
+					message: 'Enter valid password',
+					isError: true,
+					error: null
+				});
+			}
+
+			const newHash = await new Promise((resolve, reject) => {
+				getHassPassword(payload?.newPassword, (h) => resolve(h));
+			});
+
+			await MemberModel.findOneAndUpdate(
+				{ userId },
+				{ $set: { password: newHash } },
+				{ new: true, runValidators: true }
+			).lean();
+
+			cb({
+				success: true,
+				data: null,
+				message: 'Password updated.',
+				isError: false,
+				error: null
+			});
+
+
+		} catch (er) {
+			cb({
+				success: false,
+				data: null,
+				message: 'Failed',
+				isError: false,
+				error: er
+			})
+		}
+	});
+
 });
