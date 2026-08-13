@@ -36,7 +36,6 @@ socketIO.use(async (socket, next) => {
 		const token = socket.handshake.auth.token;
 		const user = jwt.verify(token, process.env.JWT_SECRET);
 		socket.userId = user?.userId;
-		// socket.userName = user?.userName;
 		next();
 	} catch (err) {
 		console.log('error')
@@ -51,7 +50,7 @@ socketIO.on('connection', (socket) => {
 	});
 
 	socket.onAny((eventName, ...args) => {
-		console.log(`🔥 event name: "${eventName}"`); 
+		console.log(`🔥 event name: "${eventName}"`);
 		// console.log("Arguments:", args);
 	});
 
@@ -74,11 +73,25 @@ socketIO.on('connection', (socket) => {
 			}
 
 			const members = await MemberModel.find(filter).select('-password').lean();
-			// const costs = await FixedCostModel.findOne({ userId }).lean();
+
+			// Merge members with their FixedCost individualCosts by userId
+			let mergedMembers = members;
+			if (Array.isArray(members) && members.length) {
+				const userIds = members.map(m => m.userId).filter(Boolean);
+				if (userIds.length) {
+					const costs = await FixedCostModel.find({ userId: { $in: userIds } }).lean();
+					const costsMap = {};
+					(costs || []).forEach(c => { costsMap[c.userId] = c; });
+					mergedMembers = members.map(m => ({
+						...m,
+						individualCosts: costsMap[m.userId]?.individualCosts || []
+					}));
+				}
+			}
 
 			cb({
 				success: true,
-				data: members,
+				data: mergedMembers,
 				message: 'Members retrieved successfully.',
 				isError: false,
 				error: null
@@ -197,7 +210,7 @@ socketIO.on('connection', (socket) => {
 			const costs = await FixedCostModel.findOne({ userId }).lean();
 			cb({
 				success: true,
-				data: {...matchedUser, individualCosts: costs?.individualCosts ||[] },
+				data: { ...matchedUser, individualCosts: costs?.individualCosts || [] },
 				message: 'Success.',
 				isError: false,
 				error: null
@@ -355,7 +368,7 @@ socketIO.on('connection', (socket) => {
 		}
 	});
 
-	socket.on('member_individual_fixed_cost_update', async(payload, cb) => {
+	socket.on('member_individual_fixed_cost_update', async (payload, cb) => {
 		try {
 			const query = { userId: payload?.userId };
 			const options = {
