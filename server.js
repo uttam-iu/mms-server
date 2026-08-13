@@ -16,6 +16,7 @@ mongoose.connect(MONGO_URI, { dbName: 'mms' })
 	.catch((err) => console.log('DB Connection Error: ', err));
 
 const app = require("./app");
+const { FixedCostModel } = require('./schemas/fixedCostSchema');
 
 const server = app.listen(process.env.PORT, () => {
 	console.log(`Server listening on ${process.env.PORT}`);
@@ -43,12 +44,16 @@ socketIO.use(async (socket, next) => {
 });
 
 socketIO.on('connection', (socket) => {
-	console.log(`🔥:${socket?.userId} A user connected`);
+	console.log(`${socket?.id} A user connected`);
 	socket.on('disconnect', () => {
-		console.log(`🔥:${socket?.userId} A user disconnected`);
+		console.log(`${socket?.id} A user disconnected`);
 		socket?.disconnect();
 	});
 
+	socket.onAny((eventName, ...args) => {
+		console.log(`🔥 event name: "${eventName}"`); 
+		// console.log("Arguments:", args);
+	});
 
 	socket.on('get_members', async (payload, cb) => {
 		try {
@@ -69,6 +74,7 @@ socketIO.on('connection', (socket) => {
 			}
 
 			const members = await MemberModel.find(filter).select('-password').lean();
+			// const costs = await FixedCostModel.findOne({ userId }).lean();
 
 			cb({
 				success: true,
@@ -188,9 +194,10 @@ socketIO.on('connection', (socket) => {
 			}
 
 			const matchedUser = await MemberModel.findOne({ userId }).select('-password').lean();
+			const costs = await FixedCostModel.findOne({ userId }).lean();
 			cb({
 				success: true,
-				data: matchedUser,
+				data: {...matchedUser, individualCosts: costs?.individualCosts ||[] },
 				message: 'Success.',
 				isError: false,
 				error: null
@@ -337,6 +344,35 @@ socketIO.on('connection', (socket) => {
 			});
 
 
+		} catch (er) {
+			cb({
+				success: false,
+				data: null,
+				message: 'Failed',
+				isError: false,
+				error: er
+			})
+		}
+	});
+
+	socket.on('member_individual_fixed_cost_update', async(payload, cb) => {
+		try {
+			const query = { userId: payload?.userId };
+			const options = {
+				upsert: true,
+				new: true,
+				runValidators: true
+			};
+
+			const result = await FixedCostModel.findOneAndUpdate(query, payload, options)
+
+			cb({
+				success: true,
+				data: result,
+				message: 'Fixed cost updated.',
+				isError: false,
+				error: null
+			})
 		} catch (er) {
 			cb({
 				success: false,
