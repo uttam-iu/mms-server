@@ -6,17 +6,17 @@ const _ = require('lodash');
 const jwt = require("jsonwebtoken");
 const { v4: uuid } = require('uuid');
 const mongoose = require('mongoose');
+const { deleteUtilitiesFixedCost, getUtilitiesFixedCost, createExtraExpenses, updateIndividualFixedCost } = require('./controllers/fixedCostController');
+const { getMyProfile, updateMyProfile, changeMyPassword } = require('./controllers/profileController');
+const { getMembers, createMember, updateMember } = require('./controllers/memberController');
 
 const MONGO_URI = process.env.MONGO_URI;
-
-const { MemberCreateModel, MemberModel, MemberUpdateModel } = require('./schemas/memberSchema');
 
 mongoose.connect(MONGO_URI, { dbName: 'mms' })
 	.then((res) => console.log('MongoDB Connected Successfully'))
 	.catch((err) => console.log('DB Connection Error: ', err));
 
 const app = require("./app");
-const { FixedCostModel } = require('./schemas/fixedCostSchema');
 
 const server = app.listen(process.env.PORT, () => {
 	console.log(`Server listening on ${process.env.PORT}`);
@@ -50,351 +50,48 @@ socketIO.on('connection', (socket) => {
 	});
 
 	socket.onAny((eventName, ...args) => {
-		console.log(`🔥 event name: "${eventName}"`);
-		// console.log("Arguments:", args);
+		console.log(`event name: "${eventName}"`);
+		console.log("Arguments:", args);
 	});
 
 	socket.on('get_members', async (payload, cb) => {
-		try {
-			const { searchText, status } = payload || {};
-			const filter = {};
-
-			if (typeof status === 'string' && status.trim()) {
-				filter.status = status.trim();
-			}
-
-			if (typeof searchText === 'string' && searchText.trim()) {
-				const regex = new RegExp(_.escapeRegExp(searchText.trim()), 'i');
-				filter.$or = [
-					{ fullName: regex },
-					{ phone: regex },
-					{ userName: regex }
-				];
-			}
-
-			const members = await MemberModel.find(filter).select('-password').lean();
-
-			// Merge members with their FixedCost individualCosts by userId
-			let mergedMembers = members;
-			if (Array.isArray(members) && members.length) {
-				const userIds = members.map(m => m.userId).filter(Boolean);
-				if (userIds.length) {
-					const costs = await FixedCostModel.find({ userId: { $in: userIds } }).lean();
-					const costsMap = {};
-					(costs || []).forEach(c => { costsMap[c.userId] = c; });
-					mergedMembers = members.map(m => ({
-						...m,
-						individualCosts: costsMap[m.userId]?.individualCosts || []
-					}));
-				}
-			}
-
-			cb({
-				success: true,
-				data: mergedMembers,
-				message: 'Members retrieved successfully.',
-				isError: false,
-				error: null
-			});
-
-		} catch (er) {
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed to retrieve members.',
-				isError: true,
-				error: er
-			});
-		}
+		getMembers(payload, cb)
 	});
 
 	socket.on('member_create', (payload, cb) => {
-		try {
-			getHassPassword(payload?.password, async (hPass) => {
-				const params = { ...payload, password: hPass };
-				const newMember = MemberCreateModel(params);
-				await newMember?.save();
-				cb({
-					success: true,
-					data: null,
-					message: 'Member created.',
-					isError: false,
-					error: null
-				})
-			})
-		} catch (er) {
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed',
-				isError: false,
-				error: er
-			})
-		}
+		createMember(payload, cb)
 	});
 
 	socket.on('member_update', async (payload, cb) => {
-		try {
-			const userId = payload?.userId;
-			if (!userId) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Invalid member.',
-					isError: true,
-					error: null
-				});
-			}
-
-			const params = { ...payload, updatedAt: new Date().toISOString() };
-			delete params.userId;
-
-			if (params.password) {
-				params.password = await new Promise((resolve, reject) => {
-					getHassPassword(params.password, (hash) => {
-						resolve(hash);
-					});
-				});
-			}
-
-			const mem = await MemberModel.findOneAndUpdate(
-				{ userId },
-				{ $set: params },
-				{ new: true, runValidators: true }
-			).lean();
-
-			if (!mem) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Member not found.',
-					isError: true,
-					error: null
-				});
-			}
-
-			const { password, ...memberWithoutPassword } = mem;
-			cb({
-				success: true,
-				data: memberWithoutPassword,
-				message: 'Member updated.',
-				isError: false,
-				error: null
-			});
-		} catch (er) {
-			console.log(er)
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed',
-				isError: false,
-				error: er
-			})
-		}
+		updateMember(payload, cb)
 	});
 
 	socket.on('get_my_profile', async (payload, cb) => {
-		try {
-			const userId = socket?.userId;
-			if (!userId) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Invalid user',
-					isError: true,
-					error: null
-				});
-			}
-
-			const matchedUser = await MemberModel.findOne({ userId }).select('-password').lean();
-			const costs = await FixedCostModel.findOne({ userId }).lean();
-			cb({
-				success: true,
-				data: { ...matchedUser, individualCosts: costs?.individualCosts || [] },
-				message: 'Success.',
-				isError: false,
-				error: null
-			});
-		} catch (er) {
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed to retrieve profile.',
-				isError: true,
-				error: er
-			});
-		}
+		getMyProfile(payload, cb)
 	});
 
 	socket.on('profile_update', async (payload, cb) => {
-		try {
-			const userId = socket?.userId;
-			if (!userId) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Invalid User',
-					isError: true,
-					error: null
-				});
-			}
-
-			const params = { ...payload, updatedAt: new Date().toISOString() };
-			delete params.userId;
-
-			const mem = await MemberModel.findOneAndUpdate(
-				{ userId },
-				{ $set: params },
-				{ new: true, runValidators: true }
-			).lean();
-
-			if (!mem) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Profile not found.',
-					isError: true,
-					error: null
-				});
-			}
-
-			const { password, ...memberWithoutPassword } = mem;
-			cb({
-				success: true,
-				data: memberWithoutPassword,
-				message: 'Member updated.',
-				isError: false,
-				error: null
-			});
-		} catch (er) {
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed',
-				isError: false,
-				error: er
-			})
-		}
+		updateMyProfile(payload, cb)
 	});
 
 	socket.on('password_change', async (payload, cb) => {
-		try {
-			const userId = socket?.userId;
-
-			if (!userId) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Invalid User',
-					isError: true,
-					error: null
-				});
-			}
-
-			if (payload?.currentPassword === payload?.newPassword) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Same Password',
-					isError: true,
-					error: null
-				});
-			}
-
-			if (!payload?.currentPassword || !payload?.newPassword) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Password required',
-					isError: true,
-					error: null
-				});
-			}
-
-			const matchedUser = await MemberModel.findOne({ userId }).lean();
-			if (!matchedUser) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'User not found',
-					isError: true,
-					error: null
-				});
-			}
-
-			const isMatched = await new Promise((resolve) => {
-				isPasswordMatch(payload?.currentPassword, matchedUser?.password, (res) => {
-					resolve(res);
-				});
-			});
-
-			if (!isMatched) {
-				return cb({
-					success: false,
-					data: null,
-					message: 'Enter valid password',
-					isError: true,
-					error: null
-				});
-			}
-
-			const newHash = await new Promise((resolve, reject) => {
-				getHassPassword(payload?.newPassword, (h) => resolve(h));
-			});
-
-			await MemberModel.findOneAndUpdate(
-				{ userId },
-				{ $set: { password: newHash } },
-				{ new: true, runValidators: true }
-			).lean();
-
-			cb({
-				success: true,
-				data: null,
-				message: 'Password updated.',
-				isError: false,
-				error: null
-			});
-
-
-		} catch (er) {
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed',
-				isError: false,
-				error: er
-			})
-		}
+		changeMyPassword(payload, cb)
 	});
 
 	socket.on('member_individual_fixed_cost_update', async (payload, cb) => {
-		try {
-			const query = { userId: payload?.userId };
-			const options = {
-				upsert: true,
-				new: true,
-				runValidators: true
-			};
+		updateIndividualFixedCost(payload, cb)
+	});
 
-			const result = await FixedCostModel.findOneAndUpdate(query, payload, options)
+	socket.on('fixed_utility_cost_create', async (payload, cb) => {
+		createExtraExpenses(payload, cb)
+	});
 
-			cb({
-				success: true,
-				data: result,
-				message: 'Fixed cost updated.',
-				isError: false,
-				error: null
-			})
-		} catch (er) {
-			cb({
-				success: false,
-				data: null,
-				message: 'Failed',
-				isError: false,
-				error: er
-			})
-		}
+	socket.on('fixed_utility_cost', async (payload, cb) => {
+		getUtilitiesFixedCost(payload, cb)
+	});
+
+	socket.on('delete_utility_cost', async (payload, cb) => {
+		deleteUtilitiesFixedCost(payload, cb)
 	});
 
 });
