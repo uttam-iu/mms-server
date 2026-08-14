@@ -17,6 +17,7 @@ mongoose.connect(MONGO_URI, { dbName: 'mms' })
 	.catch((err) => console.log('DB Connection Error: ', err));
 
 const app = require("./app");
+const { deleteBazar, getBazarExpenses, createBazarExpense } = require('./controllers/bazarExpensesController');
 
 const server = app.listen(process.env.PORT, () => {
 	console.log(`Server listening on ${process.env.PORT}`);
@@ -67,7 +68,7 @@ socketIO.on('connection', (socket) => {
 	});
 
 	socket.on('get_my_profile', async (payload, cb) => {
-		getMyProfile(payload, cb)
+		getMyProfile(socket, payload, cb)
 	});
 
 	socket.on('profile_update', async (payload, cb) => {
@@ -92,6 +93,19 @@ socketIO.on('connection', (socket) => {
 
 	socket.on('delete_utility_cost', async (payload, cb) => {
 		deleteUtilitiesFixedCost(payload, cb)
+	});
+
+
+	socket.on('bazar_expense_update', async (payload, cb) => {
+		createBazarExpense(payload, cb)
+	});
+
+	socket.on('bazar_expenses', async (payload, cb) => {
+		getBazarExpenses(payload, cb)
+	});
+
+	socket.on('delete_bazar_expense', async (payload, cb) => {
+		deleteBazar(payload, cb)
 	});
 
 });

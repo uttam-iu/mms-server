@@ -2,7 +2,7 @@ const { getHassPassword, isPasswordMatch } = require("../helpers/utilities");
 const { IndividualFixedCostModel } = require("../schemas/fixedCostSchema");
 const { MemberModel } = require("../schemas/memberSchema");
 
-exports.getMyProfile = async (payload, cb) => {
+exports.getMyProfile = async (socket, payload, cb) => {
     try {
         const userId = socket?.userId;
         if (!userId) {
@@ -16,7 +16,7 @@ exports.getMyProfile = async (payload, cb) => {
         }
 
         const matchedUser = await MemberModel.findOne({ userId }).select('-password').lean();
-        const costs = await IndividualFixedCostModel.findOne({ userId }).lean();
+        const costs =await IndividualFixedCostModel.findOne({ userId }).lean();
         cb({
             success: true,
             data: { ...matchedUser, individualCosts: costs?.individualCosts || [] },
