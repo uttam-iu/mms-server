@@ -18,6 +18,7 @@ mongoose.connect(MONGO_URI, { dbName: 'mms' })
 
 const app = require("./app");
 const { deleteBazar, getBazarExpenses, createBazarExpense } = require('./controllers/bazarExpensesController');
+const { getMealMatrix } = require('./controllers/mealMatrixController');
 
 const server = app.listen(process.env.PORT, () => {
 	console.log(`Server listening on ${process.env.PORT}`);
@@ -106,6 +107,10 @@ socketIO.on('connection', (socket) => {
 
 	socket.on('delete_bazar_expense', async (payload, cb) => {
 		deleteBazar(payload, cb)
+	});
+
+	socket.on('meal_matrix', async (payload, cb) => {
+		getMealMatrix(payload, cb)
 	});
 
 });
