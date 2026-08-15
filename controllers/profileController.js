@@ -80,7 +80,7 @@ exports.updateMyProfile = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
@@ -169,7 +169,7 @@ exports.changeMyPassword = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }

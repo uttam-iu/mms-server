@@ -13,6 +13,6 @@ const bazarExpensesSchema = mongoose.Schema({
     updatedAt: { type: String, default: Date.now() },
 })
 
-const BazadExpenseModel = mongoose?.models?.BazadExpense || mongoose.model('BazadExpense', bazarExpensesSchema);
+const BazarExpenseModel = mongoose?.models?.BazarExpense || mongoose.model('BazarExpense', bazarExpensesSchema);
 
-module.exports = { BazadExpenseModel};
+module.exports = { BazarExpenseModel};

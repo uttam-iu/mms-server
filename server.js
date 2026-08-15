@@ -8,7 +8,7 @@ const { v4: uuid } = require('uuid');
 const mongoose = require('mongoose');
 const { deleteUtilitiesFixedCost, getUtilitiesFixedCost, createExtraExpenses, updateIndividualFixedCost } = require('./controllers/fixedCostController');
 const { getMyProfile, updateMyProfile, changeMyPassword } = require('./controllers/profileController');
-const { getMembers, createMember, updateMember } = require('./controllers/memberController');
+const { getMembers, createMember, updateMember, updateStatus } = require('./controllers/memberController');
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -18,7 +18,8 @@ mongoose.connect(MONGO_URI, { dbName: 'mms' })
 
 const app = require("./app");
 const { deleteBazar, getBazarExpenses, createBazarExpense } = require('./controllers/bazarExpensesController');
-const { getMealMatrix } = require('./controllers/mealMatrixController');
+const { getMealMatrix, updateDailyMeal } = require('./controllers/mealMatrixController');
+const { getMonthlySummary } = require('./controllers/summaryController');
 
 const server = app.listen(process.env.PORT, () => {
 	console.log(`Server listening on ${process.env.PORT}`);
@@ -40,7 +41,7 @@ socketIO.use(async (socket, next) => {
 		socket.userId = user?.userId;
 		next();
 	} catch (err) {
-		console.log('error')
+		console.log('error', err)
 	}
 });
 
@@ -66,6 +67,10 @@ socketIO.on('connection', (socket) => {
 
 	socket.on('member_update', async (payload, cb) => {
 		updateMember(payload, cb)
+	});
+
+	socket.on('member_status_update', async (payload, cb) => {
+		updateStatus(payload, cb)
 	});
 
 	socket.on('get_my_profile', async (payload, cb) => {
@@ -111,6 +116,14 @@ socketIO.on('connection', (socket) => {
 
 	socket.on('meal_matrix', async (payload, cb) => {
 		getMealMatrix(payload, cb)
+	});
+
+	socket.on('meal_matrix_update', async (payload, cb) => {
+		updateDailyMeal(payload, cb)
+
+	});
+	socket.on('monthly_summary', async (payload, cb) => {
+		getMonthlySummary(payload, cb)
 	});
 
 });

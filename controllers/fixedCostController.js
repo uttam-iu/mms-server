@@ -1,5 +1,6 @@
 const { FixedUtilityModel, IndividualFixedCostModel } = require("../schemas/fixedCostSchema");
 const { MemberModel } = require("../schemas/memberSchema");
+const { getMonthlyMealConsumedMembers } = require("./mealMatrixController");
 
 exports.deleteUtilitiesFixedCost = async (payload, cb) => {
     try {
@@ -17,20 +18,26 @@ exports.deleteUtilitiesFixedCost = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
 }
 
-exports.getUtilitiesFixedCost = async (payload, cb) => {
-    try {
-        const result = await FixedUtilityModel.find({ year: payload?.year, month: payload?.month }).lean();
-        const activeMember = await MemberModel.find({ status: 'active' }).select('-password').lean();
+exports.getExtraCost = async(payload)=>{
+    const extraCost = await FixedUtilityModel.find({ year: payload?.year, month: payload?.month }).lean();
+    return extraCost;
+}
 
+exports.getUtilitiesFixedCost = async (payload, cb) => {
+    console.log('called')
+    try {
+        const extraCost = await this.getExtraCost(payload);
+        console.log(extraCost)
+        const activeMember = await getMonthlyMealConsumedMembers(payload)
         cb({
             success: true,
-            data: { fixedCosts: result, activeMembers: activeMember?.length },
+            data: { fixedCosts: extraCost, activeMembers: activeMember?.length || 0 },
             message: 'Success',
             isError: false,
             error: null
@@ -40,7 +47,7 @@ exports.getUtilitiesFixedCost = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
@@ -76,7 +83,7 @@ exports.createExtraExpenses = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
@@ -105,7 +112,7 @@ exports.updateIndividualFixedCost = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }

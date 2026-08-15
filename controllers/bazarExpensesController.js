@@ -1,9 +1,10 @@
-const { BazadExpenseModel } = require("../schemas/bazarExpensesSchema");
+const { BazarExpenseModel } = require("../schemas/bazarExpensesSchema");
 const { MemberModel } = require("../schemas/memberSchema");
+const { getMonthlyMealConsumedMembers } = require("./mealMatrixController");
 
 exports.deleteBazar = async (payload, cb) => {
     try {
-        await BazadExpenseModel.deleteOne({ bazarId: payload?.id });
+        await BazarExpenseModel.deleteOne({ bazarId: payload?.id });
 
         cb({
             success: true,
@@ -17,29 +18,33 @@ exports.deleteBazar = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
 }
 
+exports.getBazarCost = async (payload) => {
+        const activeMember = await getMonthlyMealConsumedMembers(payload);
+    const expenses = await BazarExpenseModel.find({ year: payload?.year, month: payload?.month }).lean();
+    const result = (expenses || []).map((ex) => {
+        const shopper = activeMember?.find(ec => ec?.userId === ex?.shopperUserId);
+        return {
+            ...ex,
+            shopper
+        }
+    });
+    return {bazarCost: result, activeMember};
+}
+
 exports.getBazarExpenses = async (payload, cb) => {
     try {
-        const activeMember = await MemberModel.find({ status: 'active' }).select('-password').lean();
-        const expenses = await BazadExpenseModel.find({ year: payload?.year, month: payload?.month }).lean();
-
-        const result = (expenses ||[]).map((ex) => {
-            const shopper = activeMember?.find(ec=>ec?.userId === ex?.shopperUserId);
-            return {
-                ...ex,
-                shopper
-            }
-        });
+        const {bazarCost,activeMember } = await this.getBazarCost(payload)
 
         cb({
             success: true,
             data: {
-                bazarExpenses: result, totalMealNumber: 0, activeMemberMeta: activeMember?.map(ec => {
+                bazarExpenses: bazarCost, totalMealNumber: 0, activeMemberMeta: activeMember?.map(ec => {
                     return {
                         label: ec?.fullName,
                         value: ec?.userId
@@ -55,7 +60,7 @@ exports.getBazarExpenses = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
@@ -77,7 +82,7 @@ exports.createBazarExpense = async (payload, cb) => {
             runValidators: true
         };
 
-        const result = await BazadExpenseModel.findOneAndUpdate(query, payload, options);
+        const result = await BazarExpenseModel.findOneAndUpdate(query, payload, options);
 
         cb({
             success: true,
@@ -91,7 +96,7 @@ exports.createBazarExpense = async (payload, cb) => {
             success: false,
             data: null,
             message: 'Failed',
-            isError: false,
+            isError: true,
             error: er
         })
     }
