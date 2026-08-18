@@ -1,7 +1,7 @@
-const bcrypt = require("bcrypt")
+import bcrypt from "bcrypt"
 const saltRounds = 10;
 
-const serverFormattedDateAndTime = (dateStr) => {
+export const serverFormattedDateAndTime = (dateStr) => {
     if (!dateStr) return dateStr;
 
     let date;
@@ -27,7 +27,7 @@ const serverFormattedDateAndTime = (dateStr) => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-const serverFormattedDate = (dateStr) => {
+export const serverFormattedDate = (dateStr) => {
     if (!dateStr) return dateStr;
 
     let date;
@@ -46,21 +46,21 @@ const serverFormattedDate = (dateStr) => {
     return `${year}-${month}-${day}`;
 };
 
-const getHassPassword = (text, cb) => {
+export const getHassPassword = (text, cb) => {
     const plainText = text?.toString()
     bcrypt.hash(plainText, saltRounds, function (err, hash) {
         cb(hash);
     });
 }
 
-const isPasswordMatch = (plainText, hash, cb) => {
+export const isPasswordMatch = (plainText, hash, cb) => {
     bcrypt.compare(plainText, hash, function (err, result) {
         // result == true
         cb(result);
     });
 }
 
-const getResponseTemplate = (res, statusCode = 200, data = null, message = "") => {
+export const getResponseTemplate = (res, statusCode = 200, data = null, message = "") => {
     const isSuccess = statusCode >= 200 && statusCode < 300;
     // const msg = message || statusCode>=200 && statusCode <300 ? 'Success' : 'Failed';
     return res.status(statusCode).json({
@@ -70,12 +70,4 @@ const getResponseTemplate = (res, statusCode = 200, data = null, message = "") =
         data,
         isError: !isSuccess,
     });
-}
-
-module.exports = {
-    serverFormattedDate: serverFormattedDate,
-    serverFormattedDateAndTime: serverFormattedDateAndTime,
-    getHassPassword: getHassPassword,
-    isPasswordMatch: isPasswordMatch,
-    getResponseTemplate: getResponseTemplate
 }

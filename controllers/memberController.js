@@ -1,9 +1,9 @@
-const { getHassPassword } = require("../helpers/utilities");
-const _ = require('lodash');
-const { IndividualFixedCostModel } = require("../schemas/fixedCostSchema");
-const { MemberModel, MemberCreateModel } = require("../schemas/memberSchema");
+import { getHassPassword } from "../helpers/utilities.js";
+import _ from 'lodash';
+import { IndividualFixedCostModel } from "../schemas/fixedCostSchema.js";
+import { MemberModel, MemberCreateModel } from "../schemas/memberSchema.js";
 
-exports.getAllMember = async (payload) => {
+export const getAllMember = async (payload) => {
 	const { searchText, status } = payload || {};
 	const filter = {};
 
@@ -39,7 +39,7 @@ exports.getAllMember = async (payload) => {
 	return mergedMembers;
 }
 
-exports.getMembers = async (payload, cb) => {
+export const getMembers = async (payload, cb) => {
 	try {
 		const mergedMembers = await this.getAllMember(payload);
 
@@ -62,7 +62,7 @@ exports.getMembers = async (payload, cb) => {
 	}
 }
 
-exports.createMember = async (payload, cb) => {
+export const createMember = async (payload, cb) => {
 	try {
 		getHassPassword(payload?.password, async (hPass) => {
 			const params = { ...payload, password: hPass };
@@ -87,7 +87,7 @@ exports.createMember = async (payload, cb) => {
 	}
 }
 
-exports.updateMember = async (payload, cb) => {
+export const updateMember = async (payload, cb) => {
 	try {
 		const userId = payload?.userId;
 		if (!userId) {
@@ -146,7 +146,7 @@ exports.updateMember = async (payload, cb) => {
 	}
 }
 
-exports.updateStatus = async (payload, cb) => {
+export const updateStatus = async (payload, cb) => {
 	try {
 		const userId = payload?.userId;
 		const params = { status: payload?.isActive? 'active': 'inactive', updatedAt: new Date().toISOString() };

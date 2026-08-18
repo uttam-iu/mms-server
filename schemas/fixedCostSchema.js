@@ -1,20 +1,4 @@
-const mongoose = require('mongoose');
-
-const individualFixedCostSchema = mongoose.Schema({
-    individualCosts:  [
-        {
-            id: { type: String, required: true }, 
-            costType: { type: String, required: true },
-            amount: { type: Number, required: true }
-        }
-    ],
-    userId: { type: String, required: true, default: Date.now()},
-    createdAt: { type: String, default: Date.now() },
-    updatedAt: { type: String, default: Date.now() },
-})
-
-const IndividualFixedCostModel = mongoose?.models?.IndividualFixedCost || mongoose.model('IndividualFixedCost', individualFixedCostSchema);
-
+import mongoose from 'mongoose';
 
 const fixedUtilityCostSchema = mongoose.Schema({
     year: { type: String, required: true },
@@ -29,6 +13,22 @@ const fixedUtilityCostSchema = mongoose.Schema({
     updatedAt: { type: String, default: Date.now() },
 })
 
-const FixedUtilityModel = mongoose?.models?.FixedUtility || mongoose.model('FixedUtility', fixedUtilityCostSchema);
+export const FixedUtilityModel = mongoose?.models?.FixedUtility || mongoose.model('FixedUtility', fixedUtilityCostSchema);
 
-module.exports = { IndividualFixedCostModel, FixedUtilityModel};
+
+const individualFixedCostSchema = mongoose.Schema({
+    individualCosts:  [
+        {
+            id: { type: String, required: true }, 
+            costType: { type: String, required: true },
+            amount: { type: Number, required: true }
+        }
+    ],
+    userId: { type: String, required: true},
+    createdAt: { type: String, default: Date.now() },
+    updatedAt: { type: String, default: Date.now() },
+})
+
+export const IndividualFixedCostModel = mongoose?.models?.IndividualFixedCost || mongoose.model('IndividualFixedCost', individualFixedCostSchema);
+
+

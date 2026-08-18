@@ -1,33 +1,28 @@
-const express = require("express");
-const cors = require("cors");
-const app = express();
-const multer = require('multer')
-const { v4: uuid } = require('uuid');
+// const express = require("express");
+// const cors = require("cors");
+// const app = express();
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
 
-const { serverFormattedDate, serverFormattedDateAndTime } = require('./helpers/utilities');
+// // Setup Cross Origin
+// app.use(cors({ origin: true, credentials: true }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// const PORT = process.env.PORT;
 
-// Setup Cross Origin
-app.use(cors({ origin: true, credentials: true }));
+// app.get('/', (req, res) => {
+//   res.send('Hello from Express and MongoDB!');
+// });
 
-const PORT = process.env.PORT;
+// app.use("/user", require("./routes/users"));
 
-app.get('/', (req, res) => {
-  res.send('Hello from Express and MongoDB!');
-});
+// //Setup Error Handlers
+// const errorHandlers = require("./handlers/errorHandlers");
+// app.use(errorHandlers.notFound);
 
-app.use("/user", require("./routes/users"));
+// if (process.env.NODE_ENV === "development") {
+//   app.use(errorHandlers.developmentErrors);
+// } else {
+//   app.use(errorHandlers.productionErrors);
+// }
 
-//Setup Error Handlers
-const errorHandlers = require("./handlers/errorHandlers");
-app.use(errorHandlers.notFound);
-app.use(errorHandlers.mysqlErrors);
-if (process.env.NODE_ENV === "development") {
-  app.use(errorHandlers.developmentErrors);
-} else {
-  app.use(errorHandlers.productionErrors);
-}
-
-module.exports = app;
+// module.exports = app;

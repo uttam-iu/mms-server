@@ -1,8 +1,8 @@
-const { FixedUtilityModel, IndividualFixedCostModel } = require("../schemas/fixedCostSchema");
-const { MemberModel } = require("../schemas/memberSchema");
-const { getMonthlyMealConsumedMembers } = require("./mealMatrixController");
+import { FixedUtilityModel, IndividualFixedCostModel } from "../schemas/fixedCostSchema.js";
+import { MemberModel } from "../schemas/memberSchema.js";
+import { getMonthlyMealConsumedMembers } from "./mealMatrixController.js";
 
-exports.deleteUtilitiesFixedCost = async (payload, cb) => {
+export const deleteUtilitiesFixedCost = async (payload, cb) => {
     try {
         await FixedUtilityModel.deleteOne({ billId: payload?.id });
 
@@ -24,12 +24,12 @@ exports.deleteUtilitiesFixedCost = async (payload, cb) => {
     }
 }
 
-exports.getExtraCost = async(payload)=>{
+export const getExtraCost = async(payload)=>{
     const extraCost = await FixedUtilityModel.find({ year: payload?.year, month: payload?.month }).lean();
     return extraCost;
 }
 
-exports.getUtilitiesFixedCost = async (payload, cb) => {
+export const getUtilitiesFixedCost = async (payload, cb) => {
     console.log('called')
     try {
         const extraCost = await this.getExtraCost(payload);
@@ -53,7 +53,7 @@ exports.getUtilitiesFixedCost = async (payload, cb) => {
     }
 }
 
-exports.createExtraExpenses = async (payload, cb) => {
+export const createExtraExpenses = async (payload, cb) => {
     try {
         let billId = payload?.billId;
         if (!billId) {
@@ -89,7 +89,7 @@ exports.createExtraExpenses = async (payload, cb) => {
     }
 }
 
-exports.updateIndividualFixedCost = async (payload, cb) => {
+export const updateIndividualFixedCost = async (payload, cb) => {
     try {
         const query = { userId: payload?.userId };
         const options = {

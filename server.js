@@ -1,14 +1,39 @@
+import dns from 'node:dns';
+import dotenv from 'dotenv';
+dotenv.config();
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import cors from 'cors';
+import {parseCookie} from 'cookie';
+import mongoose from 'mongoose';
 
-const dotEnv = require('dotenv');
-dotEnv.config();
-const { serverFormattedDate, serverFormattedDateAndTime, getHassPassword, isPasswordMatch } = require('./helpers/utilities');
-const _ = require('lodash');
-const jwt = require("jsonwebtoken");
-const { v4: uuid } = require('uuid');
-const mongoose = require('mongoose');
-const { deleteUtilitiesFixedCost, getUtilitiesFixedCost, createExtraExpenses, updateIndividualFixedCost } = require('./controllers/fixedCostController');
-const { getMyProfile, updateMyProfile, changeMyPassword } = require('./controllers/profileController');
-const { getMembers, createMember, updateMember, updateStatus } = require('./controllers/memberController');
+dns.setDefaultResultOrder('ipv4first');
+dns.setServers(['8.8.8.8', '8.8.4.4'])
+
+// import app from "./app";
+// import { deleteUtilitiesFixedCost, getUtilitiesFixedCost, createExtraExpenses, updateIndividualFixedCost } from './controllers/fixedCostController'
+import { deleteUtilitiesFixedCost, getUtilitiesFixedCost, createExtraExpenses, updateIndividualFixedCost } from './controllers/fixedCostController.js';
+import { getMyProfile, updateMyProfile, changeMyPassword } from './controllers/profileController.js'
+import { getMembers, createMember, updateMember, updateStatus } from './controllers/memberController.js'
+import { deleteBazar, getBazarExpenses, createBazarExpense } from './controllers/bazarExpensesController.js'
+import { getMealMatrix, updateDailyMeal } from './controllers/mealMatrixController.js'
+import { getMonthlySummary } from './controllers/summaryController.js'
+
+
+const app = express();
+const httpServer = createServer(app);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// Setup Cross Origin
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
+const server = httpServer.listen(process.env.PORT, () => {
+	console.log(`Server listening on http://localhost:${process.env.PORT}`);
+});
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -16,34 +41,81 @@ mongoose.connect(MONGO_URI, { dbName: 'mms' })
 	.then((res) => console.log('MongoDB Connected Successfully'))
 	.catch((err) => console.log('DB Connection Error: ', err));
 
-const app = require("./app");
-const { deleteBazar, getBazarExpenses, createBazarExpense } = require('./controllers/bazarExpensesController');
-const { getMealMatrix, updateDailyMeal } = require('./controllers/mealMatrixController');
-const { getMonthlySummary } = require('./controllers/summaryController');
 
-const server = app.listen(process.env.PORT, () => {
-	console.log(`Server listening on ${process.env.PORT}`);
+app.get('/', (req, res) => {
+  res.send('Hello from Express and MongoDB!');
 });
 
-const socketIO = require("socket.io")(server, {
+//Setup Error Handlers
+import {catchErrors, developmentErrors,notFound,productionErrors} from './handlers/errorHandlers.js'
+import { login, logout } from './controllers/userController.js';
+
+app.post("/user/login", catchErrors(login));
+app.post("/user/logout", catchErrors(logout));
+app.use(notFound);
+
+if (process.env.NODE_ENV === "development") {
+  app.use(developmentErrors);
+} else {
+  app.use(productionErrors);
+}
+
+const socketIO = new Server(httpServer, {
 	allowEIO3: true,
 	cors: {
-		origin: true,
+		origin: 'http://localhost:3000',
 		methods: ['GET', 'POST'],
 		credentials: true
 	}
 });
 
 socketIO.use(async (socket, next) => {
-	try {
-		const token = socket.handshake.auth.token;
-		const user = jwt.verify(token, process.env.JWT_SECRET);
-		socket.userId = user?.userId;
-		next();
-	} catch (err) {
-		console.log('error', err)
-	}
+  try {
+    const reqCookies = socket.handshake.headers.cookie;
+    
+    if (!reqCookies) {
+      console.log('❌ No cookies found in handshake headers');
+      return next(new Error('No cookies found'));
+    }
+
+    // cookie.parse ব্যবহার করা হয়েছে
+    const parsedCookies = parseCookie(reqCookies);
+    const token = parsedCookies.auth_token;
+
+    if (!token) {
+      console.log('❌ auth_token cookie is missing');
+      return next(new Error('Token missing'));
+    }
+
+    // JWT ভেরিফিকেশন
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.log('❌ JWT Verification Failed:', err.message);
+        return next(new Error(`Invalid token: ${err.message}`));
+      }
+
+      console.log('✅ Token Verified Successfully for:', decoded.userId);
+      socket.userId = decoded.userId; 
+      socket.user = decoded; 
+      next();
+    });
+
+  } catch (err) {
+    console.error('❌ Middleware Error:', err);
+    return next(new Error('Internal authentication error'));
+  }
 });
+
+// socketIO.use(async (socket, next) => {
+// 	try {
+// 		const token = socket.handshake.auth.token;
+// 		const user = jwt.verify(token, process.env.JWT_SECRET);
+// 		socket.userId = user?.userId;
+// 		next();
+// 	} catch (err) {
+// 		console.log('error', err)
+// 	}
+// });
 
 socketIO.on('connection', (socket) => {
 	console.log(`${socket?.id} A user connected`);

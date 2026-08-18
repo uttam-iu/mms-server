@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const bazarExpensesSchema = mongoose.Schema({
     bazarId: { type: String, default: Date.now() }, 
@@ -13,6 +13,4 @@ const bazarExpensesSchema = mongoose.Schema({
     updatedAt: { type: String, default: Date.now() },
 })
 
-const BazarExpenseModel = mongoose?.models?.BazarExpense || mongoose.model('BazarExpense', bazarExpensesSchema);
-
-module.exports = { BazarExpenseModel};
+export const BazarExpenseModel = mongoose?.models?.BazarExpense || mongoose.model('BazarExpense', bazarExpensesSchema);

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const memberAddSchema = mongoose.Schema({
     fullName: { type: String, required: true },
@@ -23,8 +23,6 @@ const memberUpdateSchema = mongoose.Schema({
     updatedAt: { type: String, default: Date.now() },
 })
 
-const MemberCreateModel = mongoose?.models?.Member || mongoose.model('Member', memberAddSchema);
-const MemberUpdateModel = mongoose?.models?.Member || mongoose.model('Member', memberUpdateSchema);
-const MemberModel = mongoose?.models?.Member;
-
-module.exports = { MemberCreateModel, MemberUpdateModel, MemberModel };
+export const MemberCreateModel = mongoose?.models?.Member || mongoose.model('Member', memberAddSchema);
+export const MemberUpdateModel = mongoose?.models?.Member || mongoose.model('Member', memberUpdateSchema);
+export const MemberModel = mongoose?.models?.Member;

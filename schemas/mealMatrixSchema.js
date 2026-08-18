@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-
+import mongoose from 'mongoose';
 
 const mealMatrixSchema = mongoose.Schema({
     year: { type: String, required: true },
@@ -17,6 +16,4 @@ const mealMatrixSchema = mongoose.Schema({
     ]
 })
 
-const MealMatrixModel = mongoose?.models?.MealMatrix || mongoose.model('MealMatrix', mealMatrixSchema);
-
-module.exports = { MealMatrixModel };
+export const MealMatrixModel = mongoose?.models?.MealMatrix || mongoose.model('MealMatrix', mealMatrixSchema);

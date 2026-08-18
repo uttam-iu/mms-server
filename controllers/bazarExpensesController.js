@@ -1,8 +1,8 @@
-const { BazarExpenseModel } = require("../schemas/bazarExpensesSchema");
-const { MemberModel } = require("../schemas/memberSchema");
-const { getMonthlyMealConsumedMembers } = require("./mealMatrixController");
+import { BazarExpenseModel } from "../schemas/bazarExpensesSchema.js";
+import { MemberModel } from "../schemas/memberSchema.js";
+import { getMonthlyMealConsumedMembers } from "./mealMatrixController.js";
 
-exports.deleteBazar = async (payload, cb) => {
+export const deleteBazar = async (payload, cb) => {
     try {
         await BazarExpenseModel.deleteOne({ bazarId: payload?.id });
 
@@ -24,7 +24,7 @@ exports.deleteBazar = async (payload, cb) => {
     }
 }
 
-exports.getBazarCost = async (payload) => {
+export const getBazarCost = async (payload) => {
         const activeMember = await getMonthlyMealConsumedMembers(payload);
     const expenses = await BazarExpenseModel.find({ year: payload?.year, month: payload?.month }).lean();
     const result = (expenses || []).map((ex) => {
@@ -37,7 +37,7 @@ exports.getBazarCost = async (payload) => {
     return {bazarCost: result, activeMember};
 }
 
-exports.getBazarExpenses = async (payload, cb) => {
+export const getBazarExpenses = async (payload, cb) => {
     try {
         const {bazarCost,activeMember } = await this.getBazarCost(payload)
 
@@ -66,7 +66,7 @@ exports.getBazarExpenses = async (payload, cb) => {
     }
 }
 
-exports.createBazarExpense = async (payload, cb) => {
+export const createBazarExpense = async (payload, cb) => {
     try {
         let bazarId = payload?.bazarId;
         if (!bazarId) {

@@ -1,8 +1,8 @@
-const { getHassPassword, isPasswordMatch } = require("../helpers/utilities");
-const { IndividualFixedCostModel } = require("../schemas/fixedCostSchema");
-const { MemberModel } = require("../schemas/memberSchema");
+import { getHassPassword, isPasswordMatch } from "../helpers/utilities.js";
+import { IndividualFixedCostModel } from "../schemas/fixedCostSchema.js";
+import { MemberModel } from "../schemas/memberSchema.js";
 
-exports.getMyProfile = async (socket, payload, cb) => {
+export const getMyProfile = async (socket, payload, cb) => {
     try {
         const userId = socket?.userId;
         if (!userId) {
@@ -35,7 +35,7 @@ exports.getMyProfile = async (socket, payload, cb) => {
     }
 }
 
-exports.updateMyProfile = async (payload, cb) => {
+export const updateMyProfile = async (payload, cb) => {
     try {
         const userId = socket?.userId;
         if (!userId) {
@@ -86,7 +86,7 @@ exports.updateMyProfile = async (payload, cb) => {
     }
 }
 
-exports.changeMyPassword = async (payload, cb) => {
+export const changeMyPassword = async (payload, cb) => {
     try {
         const userId = socket?.userId;
 

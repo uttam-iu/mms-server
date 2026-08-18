@@ -1,6 +1,6 @@
-const { BazarExpenseModel } = require("../schemas/bazarExpensesSchema");
-const { MealMatrixModel } = require("../schemas/mealMatrixSchema");
-const { MemberModel } = require("../schemas/memberSchema");
+import { BazarExpenseModel } from "../schemas/bazarExpensesSchema.js";
+import { MealMatrixModel } from "../schemas/mealMatrixSchema.js";
+import { MemberModel } from "../schemas/memberSchema.js";
 
 const populateMonthlyMeal = async (payload) => {
     const year = String(payload?.year || new Date().getFullYear());
@@ -43,7 +43,7 @@ const populateMonthlyMeal = async (payload) => {
     return created.toObject ? created.toObject() : created;
 }
 
-exports.getMealMatrix = async (payload, cb) => {
+export const getMealMatrix = async (payload, cb) => {
     try {
         const allMember = await MemberModel.find().select('-password').lean();
         let result = await MealMatrixModel.findOne({ year: payload?.year, month: payload?.month }).lean();
@@ -81,7 +81,7 @@ exports.getMealMatrix = async (payload, cb) => {
     }
 }
 
-exports.updateDailyMeal = async (payload, cb) => {
+export const updateDailyMeal = async (payload, cb) => {
     try {
         let result = await MealMatrixModel.findOne({ year: payload?.year, month: payload?.month }).lean();
         if (!result) {
@@ -131,7 +131,7 @@ exports.updateDailyMeal = async (payload, cb) => {
     }
 }
 
-exports.getMonthlyMealConsumedMembers = async (payload) => {
+export const getMonthlyMealConsumedMembers = async (payload) => {
     const allMember = await MemberModel.find().select('-password').lean();
     const result = await MealMatrixModel.findOne({ year: payload?.year, month: payload?.month }).lean();
 
@@ -166,7 +166,7 @@ exports.getMonthlyMealConsumedMembers = async (payload) => {
     return members;
 }
 
-exports.getMonthlyMealConsumedMeal = async (payload) => {
+export const getMonthlyMealConsumedMeal = async (payload) => {
     try {
         const result = await MealMatrixModel.findOne({ year: payload?.year, month: payload?.month }).lean();
 
