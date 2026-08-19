@@ -29,10 +29,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Setup Cross Origin
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: process.env.FRONT_END_URL, credentials: true }));
 
 const server = httpServer.listen(process.env.PORT, () => {
-	console.log(`Server listening on http://localhost:${process.env.PORT}`);
+	console.log(`Server listening on ${process.env.BACK_END_URL}`);
 });
 
 const MONGO_URI = process.env.MONGO_URI;
@@ -63,7 +63,7 @@ if (process.env.NODE_ENV === "development") {
 const socketIO = new Server(httpServer, {
 	allowEIO3: true,
 	cors: {
-		origin: 'http://localhost:3000',
+		origin:  process.env.FRONT_END_URL,
 		methods: ['GET', 'POST'],
 		credentials: true
 	}
