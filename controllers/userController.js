@@ -40,8 +40,9 @@ export const login = async (req, res) => {
 
       const { password: _password, ...userWithoutPassword } = matchedUser;
       const token = jwt.sign({ userId: matchedUser?.userId }, JWT_SECRET, {
-        expiresIn: "1h",
+        expiresIn: "1m",
       });
+
       res.cookie("auth_token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

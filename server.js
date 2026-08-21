@@ -37,9 +37,19 @@ const server = httpServer.listen(process.env.PORT, () => {
 
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI, { dbName: 'mms' })
-	.then((res) => console.log('MongoDB Connected Successfully'))
-	.catch((err) => console.log('DB Connection Error: ', err));
+function reconnectDb(){
+	mongoose.connect(MONGO_URI, { dbName: 'mms' })
+	.then((res) => console.log('DB Connected Successfully'))
+	.catch((err) => {
+		console.log('DB Connection Error: ', err);
+		setTimeout(() => {
+			console.log('reconnecting DB')
+			reconnectDb()
+		}, 1000);
+	});
+}
+
+reconnectDb()
 
 
 app.get('/', (req, res) => {
